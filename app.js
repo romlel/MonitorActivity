@@ -1,5 +1,10 @@
 const express = require('express')
 const path = require("path");
+
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3()
+const bodyParser = require('body-parser');
+
 const app = express()
 
 // #############################################################################
@@ -23,6 +28,46 @@ var options = {
   redirect: false
 }
 app.use(express.static('public', options))
+
+
+app.get('/notify/:id', async (req, res) => {
+    var to = req.params.id; // { userId: '42' }
+    
+  await s3.putObject({
+    Body: JSON.stringify(
+      {
+        ts: Date.now()
+      }
+    ),
+    Bucket: process.env.BUCKET,
+    Key: 'd_'+id,
+
+  }).promise()
+
+
+
+  res.send('Hello World!' + to);
+})
+
+app.get('/state', async (re, res) => {
+
+      
+  var params = {
+    Bucket: process.env.BUCKET,
+    Prefix: "d_"
+  }; 
+      
+    s3.listObjects(params, function (err, data) {
+    if (err) {
+        console.log(err);
+    } else {
+      
+        res.send(data);
+        console.log(data);
+    }
+  });
+
+});
 
 // #############################################################################
 // Catch all handler for all other request.
