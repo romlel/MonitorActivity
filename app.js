@@ -31,7 +31,7 @@ app.use(express.static('public', options))
 
 
 app.get('/notify/:id', async (req, res) => {
-    var to = req.params.id; // { userId: '42' }
+    var id = req.params.id; // { userId: '42' }
     
   await s3.putObject({
     Body: JSON.stringify(
