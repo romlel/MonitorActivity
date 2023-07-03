@@ -2,10 +2,11 @@ const express = require('express')
 const path = require("path");
 
 const AWS = require("aws-sdk");
-const s3 = new AWS.S3()
-const bodyParser = require('body-parser');
 
 const app = express()
+
+require('dotenv').config()
+
 
 // #############################################################################
 // Logs all request paths and method
@@ -16,54 +17,57 @@ app.use(function (req, res, next) {
   next();
 });
 
-// #############################################################################
-// This configures static hosting for files in /public that have the extensions
-// listed in the array.
-var options = {
-  dotfiles: 'ignore',
-  etag: false,
-  extensions: ['htm', 'html','css','js','ico','jpg','jpeg','png','svg'],
-  index: ['index.html'],
-  maxAge: '1m',
-  redirect: false
-}
-app.use(express.static('public', options))
 
-
-app.get('/notify/:id', async (req, res) => {
-    var id = req.params.id; // { userId: '42' }
+app.get('/notify/:id/:data', async (req, res) => {
+  var id = req.params.id;
+  var data = req.params.data;
     
-  await s3.putObject({
-    Body: JSON.stringify(
-      {
-        ts: Date.now()
-      }
-    ),
-    Bucket: process.env.BUCKET,
-    Key: 'd_'+id,
+    var aa = {"data":data};
+    console.log('toto');
+    var  s3 = new AWS.S3()
+    await s3.putObject({
+      Body: JSON.stringify(aa),
+      Bucket: process.env.BUCKET,
+      Key: 'd_'+id,//+".txt",
+    }).promise();
 
-  }).promise()
+    res.send("OK");
 
-
-
-  res.send('Hello World!' + to);
 })
 
 app.get('/state', async (re, res) => {
 
+  var  s3 = new AWS.S3()
       
   var params = {
     Bucket: process.env.BUCKET,
     Prefix: "d_"
   }; 
       
-    s3.listObjects(params, function (err, data) {
+    s3.listObjects(params, async function (err, data) {
     if (err) {
         console.log(err);
     } else {
-      
-        res.send(data);
-        console.log(data);
+
+        var toRet = [];
+
+        for (var obj of data.Contents)
+        {
+          s3File = await s3.getObject({
+            Bucket: process.env.BUCKET,
+            Key: obj.Key,
+          }).promise();
+
+          toRet.push(
+            {
+              k: obj.Key,
+              v: JSON.parse(s3File.Body.toString())
+            }
+          );
+
+         // console.log(obj.Key + " " + s3File.Body.toString());
+        }
+        res.send(toRet);
     }
   });
 
