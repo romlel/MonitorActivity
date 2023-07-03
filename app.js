@@ -94,11 +94,19 @@ app.get('/query', async (re, res) => {
 
           var val = JSON.parse(s3File.Body.toString());
           var data = parseInt(val.data) - now;
+          data /= 1000;
+
+          var avis = "nominal";
+          if (data < 60*10) //more thatn 10 min
+          {
+            avis = "toolate";
+          }
 
           toRet.push(
             {
               k: obj.Key,
-              v: data
+              v: data,
+              adv: avis
             }
           );
         }
