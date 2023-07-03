@@ -32,11 +32,9 @@ app.get('/notify/:id/:data', async (req, res) => {
     }).promise();
 
     res.send("OK");
-
 })
 
 app.get('/state', async (re, res) => {
-
   var  s3 = new AWS.S3()
       
   var params = {
@@ -48,7 +46,6 @@ app.get('/state', async (re, res) => {
     if (err) {
         console.log(err);
     } else {
-
         var toRet = [];
 
         for (var obj of data.Contents)
@@ -64,13 +61,51 @@ app.get('/state', async (re, res) => {
               v: JSON.parse(s3File.Body.toString())
             }
           );
-
-         // console.log(obj.Key + " " + s3File.Body.toString());
         }
+
         res.send(toRet);
     }
   });
+});
 
+
+app.get('/query', async (re, res) => {
+  var now = Date.now();
+
+  var  s3 = new AWS.S3()
+      
+  var params = {
+    Bucket: process.env.BUCKET,
+    Prefix: "d_"
+  }; 
+      
+    s3.listObjects(params, async function (err, data) {
+    if (err) {
+        console.log(err);
+    } else {
+        var toRet = [];
+
+        for (var obj of data.Contents)
+        {
+          s3File = await s3.getObject({
+            Bucket: process.env.BUCKET,
+            Key: obj.Key,
+          }).promise();
+
+          var val = JSON.parse(s3File.Body.toString());
+          var data = parseInt(val.data) - now;
+
+          toRet.push(
+            {
+              k: obj.Key,
+              v: data
+            }
+          );
+        }
+
+        res.send(toRet);
+    }
+  });
 });
 
 // #############################################################################
