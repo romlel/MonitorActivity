@@ -97,7 +97,7 @@ app.get('/query', async (re, res) => {
           data /= 1000;
 
           var avis = "nominal";
-          if (data < 60*10) //more thatn 10 min
+          if (data < -60*10) //more thatn 10 min
           {
             avis = "toolate";
           }
